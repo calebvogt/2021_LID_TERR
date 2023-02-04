@@ -1,6 +1,7 @@
 ## Created by Caleb C. Vogt, PhD Candidate @ Cornell University
 
 library(tidyverse)
+library(data.table)
 library(readxl)
 library(gganimate)
 library(gifski)
