@@ -10,11 +10,7 @@ library(readxl)
 library(asnipe)
 library(igraph)
 
-wd <- getwd()
-dd <- paste(getwd(), "data", sep = "/")
-output_fp <- paste(getwd(), "output", sep = "/")
-
-filenames <- list.files(dd, pattern = "*MOVEBOUT_GBI.csv", full.names = T)
+filenames <- list.files("data/", pattern = "*MOVEBOUT_GBI.csv", full.names = T)
 meta <- read.csv("data/metadata.csv")
 social_data = lapply(filenames, fread) ## READ IN ALL FILES
 
@@ -25,15 +21,13 @@ for(aa in 1:length(social_data)){
   
   df2 <- df %>% 
     select(!(V1)) %>% 
-    filter(day %in% (1:20))
+    filter(day %in% (1:20)) ## select days
   
   print(aa)
   social_data[[aa]] <- df2
 }
 
 
-
-## CREATE LISTS OF NAMES FOR MATCHING COLUMNS
 males <- meta %>% 
   filter(sex == "M") %>% 
   dplyr::select(name) %>% 
@@ -52,10 +46,8 @@ for(aa in 1:length(social_data)){
   df <- social_data[[aa]] ## PULL OUT EACH TRIAL'S DATAFRAME
   colnames(df)<-gsub("C57-M-","",colnames(df))
   colnames(df)<-gsub("C57-F-","",colnames(df))
-  colnames(df)<-gsub("NYOB-M-","",colnames(df))
-  colnames(df)<-gsub("NYOB-F-","",colnames(df))
   
-  mice_names <- colnames(df[,10:ncol(df)]) ## get mouse column names starting at col 10
+  mice_names <- colnames(df[,10:ncol(df)]) ## check!! get mouse column names starting at col 10
   focal = mice_names[1]
   # focal ="Amy"
   all_mouse_list <- list()
@@ -87,7 +79,6 @@ for(aa in 1:length(social_data)){
       #   group_by(ID1,ID2,day) %>% 
       #   summarize(total = sum(duration_s))
       # write.table(df6, "clipboard-16384", sep="\t", row.names=FALSE, col.names = TRUE)
-      ## troubleshooting tools
       
       df4 <- df3 %>% 
         mutate(start = as.POSIXct(field_time_start, origin="1970-01-01"), 
@@ -95,8 +86,8 @@ for(aa in 1:length(social_data)){
         select(trial, day, zone, start, stop, ID1, ID2) %>% ## all good
         filter(!(start==stop))## remove rows with exact same start/stop time
         
-      ## concatenate continuous flocking events for focal-partner pair into single row. i.e. the time those two mice ACTUALLY spent together, independent of other mouse behavior. 
-      df5 <- df4 %>% 
+      
+      df5 <- df4 %>% ## concatenate continuous flocking events for focal-partner pair into single row. i.e. the time those two mice ACTUALLY spent together, independent of other mouse behavior. 
         select(start,stop)
         
       temp <- unlist(df5) ## put all values into single vector
@@ -122,10 +113,5 @@ for(aa in 1:length(social_data)){
 
 }
 df8 <- do.call("rbind", trial_stats)
- 
-# test <- df8 %>% 
-#   group_by(trial, ID1, ID2,day) %>% 
-#   summarize(sum_duration_s = sum(duration_s))
-
-write.csv(df8, "data/ALLTRIAL_MOVEBOUT_GBI_edgelist.csv")
+write.csv(df8, "data/alltrial_edgelist.csv")
 

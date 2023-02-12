@@ -8,9 +8,7 @@ library(igraph)
 # load  & clean data ---------------------------------------------------------------
 filenames <- list.files("data/", pattern = "*MOVEBOUT_GBI.csv", full.names = T)
 social_data = lapply(filenames, fread) ## READ IN ALL FILES
-meta <- read_excel("data/metadata.xlsx", skip=1)
-meta <- meta %>% 
-  mutate(sex_phase=paste(sex,phase,sep='-'))
+meta <- read.csv("data/metadata.csv")
 
 # clean social data for triaged mice from social interaction bouts. 
 aa = 1
@@ -19,7 +17,7 @@ for(aa in 1:length(social_data)){
   
   df2 <- df %>% 
     select(!(V1)) %>% 
-    filter(day %in% 1:12) ## traps dropped on 5/19 or day 13. so data up until day 12 is good. 
+    filter(day %in% 1:20) ## traps dropped on 5/19 or day 13. so data up until day 12 is good. 
   
   print(aa)
   social_data[[aa]] <- df2
@@ -30,7 +28,7 @@ for(aa in 1:length(social_data)){
 ## http://estebanmoro.org/post/2015-12-21-temporal-networks-with-r-and-igraph-updated/
 ## https://kateto.net/network-visualization
 
-df <- social_data[[2]] # goes in order of trials. 
+df <- social_data[[1]] # goes in order of trials. 
 print(unique(df$trial))
 df$field_time_start <- as.POSIXct(df$field_time_start, format="%m/%d/%Y %H:%M")
 df$field_time_stop <- as.POSIXct(df$field_time_stop, format="%m/%d/%Y %H:%M")
@@ -46,14 +44,14 @@ df <- df %>% # move time columns. filter out rows with less than 2 mice.
 #   select(time_hours, time_step, everything())
 
 el_list <- list()
-i=145
-for(i in 1:(max(df$time_hours))) { # loop through time intervals. Weirdly, sometimes throws an error, but just keep running until it works, usually works after 2-3 times
+i=2
+for(i in min(df$time_hours):(max(df$time_hours))) { # loop through time intervals. Weirdly, sometimes throws an error, but just keep running until it works, usually works after 2-3 times
   gbi <- df %>%  # select mouse columns
     filter(between(time_hours, i-24,i)) %>% ## this results in a true sliding window of 24 hours over the entire trial period
-    dplyr::select(matches(c("*OB-*")))   # choose your strain.
+    dplyr::select(matches(c("*C57-*")))   # choose your strain from the column information. 
   
-  colnames(gbi) <- gsub("OB-M-","",colnames(gbi)) ## remove strain-sex info from colnames of strain you are working with. 
-  colnames(gbi) <- gsub("OB-F-","",colnames(gbi))
+  colnames(gbi) <- gsub("C57-M-","",colnames(gbi)) ## remove strain-sex info from colnames of strain you are working with. 
+  colnames(gbi) <- gsub("C57-F-","",colnames(gbi))
   ids <- colnames(gbi)
   
   undir_matrix <- get_network(association_data = gbi,    # ASNIPE FUNCTION, # TURN GBI DATA INTO UNDIRECTED WEIGHTED ADJACENCY MATRIX FOR USE IN IGRAPH. 
@@ -70,29 +68,29 @@ for(i in 1:(max(df$time_hours))) { # loop through time intervals. Weirdly, somet
 }
 edges <- do.call("rbind", el_list)
 g <- graph.data.frame(edges,directed=F) ## generate the full graph to adjust settings
-plot(g) ## plot the full graph, but note that this is not what will ultimately be used
+# plot(g) ## plot the full graph, but note that this is not what will ultimately be used
 
+meta <- meta %>% mutate(sex_treatment_num_terr = paste(sex, treatment, num_terr,sep="-"))
 ## create vertex attributes
 V(g)$sex <- as.character(meta$sex[match(V(g)$name,meta$name)])
-V(g)$label <- as.character(meta$code[match(V(g)$name,meta$name)])
-V(g)$sex_phase <- as.character(meta$sex_phase[match(V(g)$name,meta$name)])
-V(g)$family_group <- as.character(meta$group[match(V(g)$name,meta$name)])
-V(g)$phase = as.character(meta$phase[match(V(g)$name,meta$name)])
-V(g)$color = V(g)$sex_phase ## Have to set the founder and invader attributes by color and not shape, due to issue with the log degree, only good way to make nodes disappear. 
-V(g)$color = gsub("M-early","lightblue",V(g)$color) 
-V(g)$color = gsub("F-early","gold",V(g)$color) 
-V(g)$color = gsub("M-late","red",V(g)$color) 
-V(g)$color = gsub("F-late","pink",V(g)$color) 
+V(g)$code <- as.character(meta$code[match(V(g)$name,meta$name)])
+V(g)$sex_treatment_num_terr = as.character(meta$sex_treatment_num_terr[match(V(g)$name,meta$name)])
+V(g)$color = V(g)$sex_treatment_num_terr ## Have to set the founder and invader attributes by color and not shape, due to issue with the log degree, only good way to make nodes disappear. 
+V(g)$color = gsub("M-early-1","goldenrod4",V(g)$color) 
+V(g)$color = gsub("M-early-2","darkorchid4",V(g)$color) 
+V(g)$color = gsub("F-early-0","red",V(g)$color) 
+V(g)$color = gsub("M-late-0","gray",V(g)$color) 
+V(g)$color = gsub("F-late-0","pink",V(g)$color) 
 
 ## create 24h sliding window networks
 g2 <- delete_edges(g,which(E(g)$time > 1)) ## get the layout for the first time step
 layout.old <- norm_coords(layout.graphopt(g2), xmin = -1, xmax = 1, ymin = -1, ymax = 1) ## create normal layout
-total_time <- max(E(g)$time) ## get max time of g
+# total_time <- max(E(g)$time) ## get max time of g
 dt <- 1 ## set animation time interval. Check this and the delete_edges argument, related
 
 png(file=paste0("output/animations/pngs/", "example%03d.png"), width=1920,height=1080) ## set up png
-i=1
-for(i in seq(1,total_time,dt)){
+i=2
+for(i in seq(min(E(g)$time),max(E(g)$time),dt)){ ##
   print(i)
   g2 <- delete_edges(g, which(E(g)$time !=i)) #deletes edges not in the relevant time period. note that time X represents that hour and the preceding 24h worth of data
   # g2 <- delete_edges(g, which(E(g)$time > i | E(g)$time < i)) #deletes edges not in the relevant time period. note that time X represents that hour and the preceding 24h worth of data
@@ -107,13 +105,13 @@ for(i in seq(1,total_time,dt)){
   
   plot(g2,
        layout=layout.new, ## provides coordinates 
-       vertex.label= V(g2)$label, # include labels
-       vertex.size=10+3*log(degree(g2)), ## log scale means non-present nodes disappear due to infinite values not displayed. Doesn't appear to work with non-circular shapes.
-       # vertex.size = scales::rescale(degree(g2), to = c(5,30)), ## rescale vertex strength to reasonable min/max size
+       vertex.label= V(g2)$code, # include labels
+       # vertex.size=10+3*log(degree(g2)), ## log scale means non-present nodes disappear due to infinite values not displayed. Doesn't appear to work with non-circular shapes.
+       vertex.size = scales::rescale(degree(g2), to = c(5,30)), ## rescale vertex strength to reasonable min/max size
        edge.width = scales::rescale(as.numeric(E(g2)$weight), to = c(0.5,15)), # rescale edge weight to reasonable min/max size
        edge.color = "darkgray",
        edge.curved = 0.2,
-       asp=9/16, ## change the aspect ratio. defaults to circle
+       # asp=9/16, ## change the aspect ratio. defaults to circle
        # margin=-0.15, ## set the margin. 
   )
   # title(paste0("Night ", ceiling(i/24)), cex.main=3) ## get night 
@@ -126,6 +124,6 @@ dev.off()
 ## open cmd window in testing folder
 ## -r sets frames/pngs shown per second. 1 png per hour. 
 
-ffmpeg -r 15 -i example%03d.png -b:v 20M move_T002_social_network.mp4 
-ffmpeg -r 15 -i example%03d.png -b:v 20M move_T002_social_network.gif 
+ffmpeg -r 15 -i example%03d.png -b:v 20M -vcodec libx264 output.mp4 
+ffmpeg -r 15 -i example%03d.png -b:v 20M output.gif 
 
