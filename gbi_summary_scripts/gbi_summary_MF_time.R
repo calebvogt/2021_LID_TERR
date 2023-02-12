@@ -7,6 +7,7 @@ library(lme4)
 library(lmerTest)
 library(ggpubr)
 
+
 # load data ---------------------------------------------------------------
 meta <- read.csv("data/metadata.csv")
 gbi <- read.csv("data/ALLTRIAL_MOVEBOUT_GBI_summary.csv")
