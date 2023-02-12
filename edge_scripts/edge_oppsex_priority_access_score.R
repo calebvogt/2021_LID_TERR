@@ -1,4 +1,8 @@
 ## Created by Caleb C. Vogt, PhD Candidate @ Cornell University
+
+
+## Using the edgelist, create an evolving metric for each male of how many females he captures. 
+
 library(tidyverse)
 library(magrittr)
 library(data.table)
@@ -10,56 +14,54 @@ library(emmeans)
 data <- read.csv("data/ALLTRIAL_MOVEBOUT_GBI_edgelist.csv")
 metadata <- read.csv("data/metadata.csv")
 
-df <- data %>%
+df0 <- data %>%
   group_by(trial, ID1, ID2,day) %>%
   summarize(sum_duration_s = sum(duration_s))
 
 
 # top OppSex repeated top ranked partner -------------------------------------------------
-df0 <- df %>% 
+df <- df0 %>% 
   merge(., metadata[,c("name","code", "sex", "strain")], by.x="ID1", by.y="name") %>% 
-  rename(ID1_code=code, ID1_sex=sex, field_time_start=start, field_time_stop=stop) %>% 
+  rename(ID1_code=code, ID1_sex=sex) %>% 
   merge(., metadata[,c("name","code", "sex")], by.x="ID2", by.y="name") %>% 
   rename(ID2_code=code, ID2_sex=sex) %>% 
-  select(trial, strain, day, zone, field_time_start, field_time_stop, duration_s, 
-         ID1, ID1_code, ID1_sex,ID2, ID2_code, ID2_sex) %>% 
+  select(trial, strain, day, sum_duration_s, ID1, ID1_code, ID1_sex,ID2, ID2_code, ID2_sex) %>% 
   mutate(grouptype=paste0(ID1_sex,ID2_sex)) %>% 
   mutate(strain=ifelse(strain=="NYOB", "Outbred","C57"))
 
-x <- unique(df0$ID1)
-y <- unique(df0$ID2)
+x <- unique(df$ID1)
+y <- unique(df$ID2)
 mice <- c(x,y)
 mice <- unique(mice)
 
 mouse_list <- list()
 aa = mice[1]
 for(aa in mice[1:length(mice)]) {
-  df <- df0 %>% 
+  df1 <- df %>% 
     filter(ID1 == aa | ID2 == aa)
   days <- unique(df$day)
-  
   day_list <- list()
-  bb =1
+  bb=1
   for(bb in days[1:length(days)]) {
-    df2 <- df %>% 
+    df2 <- df1 %>% 
       filter(ID1 == aa | ID2 == aa) %>% 
       filter(day == bb) %>%
       mutate(focal = aa, ID1 = na_if(ID1, aa), ID2 = na_if(ID2, aa)) %>% 
       mutate(partner = coalesce(ID1,ID2)) %>% 
-      select(trial, day, focal, partner, duration_s) %>% 
+      select(trial, day, focal, partner, sum_duration_s) %>% 
       merge(., metadata, by.x = "focal", by.y = "name") %>%
       mutate(focal_sex = sex) %>% 
-      select(trial, day, duration_s, focal, focal_sex, partner) %>%  
+      select(trial, day, sum_duration_s, focal, focal_sex, partner) %>%  
       merge(., metadata, by.x = "partner", by.y = "name") %>%
       mutate(partner_sex = sex) %>% 
-      select(trial, day, duration_s, focal, focal_sex, partner, partner_sex) %>% 
+      select(trial, day, sum_duration_s, focal, focal_sex, partner, partner_sex) %>% 
       filter(!(focal_sex == partner_sex)) ## remove same sex observations
     
     if(nrow(df2)>0) {
       df3 <- df2  %>% 
-        arrange(desc(duration_s)) %>% 
+        arrange(desc(sum_duration_s)) %>% 
         mutate(rank_order = c(1:nrow(.))) %>% 
-        select(trial, day, focal, partner, rank_order, duration_s)
+        select(trial, day, focal, partner, rank_order, sum_duration_s)
       
       day_list[[bb]] <- df3
       print(paste(aa, "day", bb, "finshed"))
