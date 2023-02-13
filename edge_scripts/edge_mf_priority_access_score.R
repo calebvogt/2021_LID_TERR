@@ -93,7 +93,7 @@ df6 <- df5 %>% ## time males spent in a given zone per day
   mutate(total_mf_s = sum(sum_duration_s), 
          captured = ifelse(f_prop_capture>0.5,1,0), ## determine which females were captured 
          num_f_met = n(), ## num females met per day
-         num_f_captured = sum(f_prop_capture>0.5), ## set f capture threshold
+         num_f_captured = sum(f_prop_capture>0.75), ## IMPORTANT: set f capture threshold
          prop_num_f_captured_met=num_f_captured/num_f_met,
          mean_daily_capture = mean(f_prop_capture),# for each day sum proportion female capture for all females
          sum_daily_capture = sum(f_prop_capture)) %>% ## for each day sum proportion female capture for all females
@@ -107,7 +107,7 @@ df6 <- df5 %>% ## time males spent in a given zone per day
   select(trial,focal,code,sex,treatment,num_terr,day,total_mf_s,num_f_met,num_f_captured,prop_num_f_captured_met,mean_daily_capture,sum_daily_capture,csum_daily_capture) %>% 
   arrange(treatment,focal,day)
 
-# male # of females met --------------------
+# # of females met --------------------
 df <- df6 %>% 
   filter(treatment=="early")
   
@@ -143,7 +143,7 @@ ggplot(df2, aes(x=day, y=mean, color = as.factor(num_terr))) +
           # legend.position = "none")
 ggsave(file="output/edge_mf_pas_num_f_met.svg",device="svg",unit="in",width=3,height=3,bg = "transparent") 
 
-# male total time with females --------------------
+# total male time with females --------------------
 df <- df6 %>% 
   filter(treatment=="early")
 
@@ -182,7 +182,7 @@ ggsave(file="output/edge_mf_time.svg",device="svg",unit="in",width=3,height=3,bg
 
 
 
-# male # of females captured --------------------
+# # of females captured --------------------
 df <- df6 %>% 
   filter(treatment=="early")
 
@@ -220,7 +220,7 @@ ggsave(file="output/edge_num_f_captured.svg",device="svg",unit="in",width=3,heig
 
 
 
-# male proportion of females captured out of total met --------------------
+# proportion of females captured out of total met --------------------
 df <- df6 %>% 
   filter(treatment=="early")
 
@@ -242,7 +242,45 @@ ggplot(df2, aes(x=day, y=mean, color = as.factor(num_terr))) +
                      values=c("goldenrod4","darkorchid4")) +
   theme_classic() +
   xlab("Night") +
-  ylab("Captured females of total met") +
+  ylab("Proportion of met females captured") +
+  theme(axis.text.x = element_text(color = "black", size = 8),
+        axis.title.x = element_text(color = "black", size = 8, face = "bold"), 
+        axis.text.y = element_text(color = "black", size = 8),
+        axis.title.y = element_text(color = "black", size = 8, face = "bold"), 
+        plot.background = element_rect(fill = "transparent", color = NA),
+        panel.background = element_rect(fill = "transparent"), 
+        legend.title = element_blank(),
+        legend.text = element_text(size=6),
+        legend.background = element_rect(fill='transparent'),
+        legend.position = c(0.8,0.2))
+# legend.position = "none")
+ggsave(file="output/edge_prop_f_captured.svg",device="svg",unit="in",width=3,height=3,bg = "transparent") 
+
+
+
+# male mean priority female access score --------------------
+df <- df6 %>% 
+  filter(treatment=="early")
+
+df2 <- df %>% 
+  group_by(num_terr,day) %>%
+  summarise(mean = mean(mean_daily_capture), 
+            sd = sd(mean_daily_capture), 
+            count = n(), 
+            sem = (sd/(sqrt(count))))
+
+ggplot(df2, aes(x=day, y=mean, color = as.factor(num_terr))) + 
+  geom_line(size = 0.75) + 
+  geom_point(size = 1.5) +
+  geom_errorbar(aes(ymin =mean-sem,ymax=mean+sem), width = 0.2) +
+  geom_vline(xintercept=6,color="black",linetype="dashed") +
+  # scale_x_continuous(limits = c(0.8,10.3), breaks = seq(1, 10, by = 1)) + 
+  # scale_y_continuous(limits = c(1,20), breaks = seq(2, 20, by = 2)) +
+  scale_color_manual(breaks = c("1","2"),
+                     values=c("goldenrod4","darkorchid4")) +
+  theme_classic() +
+  xlab("Night") +
+  ylab("Mean priority female access score") +
   theme(axis.text.x = element_text(color = "black", size = 8),
         axis.title.x = element_text(color = "black", size = 8, face = "bold"), 
         axis.text.y = element_text(color = "black", size = 8),
@@ -254,7 +292,8 @@ ggplot(df2, aes(x=day, y=mean, color = as.factor(num_terr))) +
         legend.background = element_rect(fill='transparent'),
         legend.position = c(0.8,0.8))
 # legend.position = "none")
-ggsave(file="output/edge_prop_f_captured.svg",device="svg",unit="in",width=3,height=3,bg = "transparent") 
+ggsave(file="output/edge_m_priority_f_access_score.svg",device="svg",unit="in",width=3,height=3,bg = "transparent") 
+
 
 
 
