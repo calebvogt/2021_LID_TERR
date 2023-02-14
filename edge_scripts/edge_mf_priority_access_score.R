@@ -91,9 +91,9 @@ df6 <- df5 %>% ## time males spent in a given zone per day
   arrange(day, focal) %>% 
   group_by(focal, day) %>% 
   mutate(total_mf_s = sum(sum_duration_s), 
-         captured = ifelse(f_prop_capture>0.5,1,0), ## determine which females were captured 
+         # captured = ifelse(f_prop_capture>0.5,1,0), ## determine which females were captured 
          num_f_met = n(), ## num females met per day
-         num_f_captured = sum(f_prop_capture>0.75), ## IMPORTANT: set f capture threshold
+         num_f_captured = sum(f_prop_capture>0.50), ## IMPORTANT: set f capture threshold
          prop_num_f_captured_met=num_f_captured/num_f_met,
          mean_daily_capture = mean(f_prop_capture),# for each day sum proportion female capture for all females
          sum_daily_capture = sum(f_prop_capture)) %>% ## for each day sum proportion female capture for all females
@@ -258,7 +258,7 @@ ggsave(file="output/edge_prop_f_captured.svg",device="svg",unit="in",width=3,hei
 
 
 
-# male mean priority female access score --------------------
+# mean priority female access score --------------------
 df <- df6 %>% 
   filter(treatment=="early")
 
@@ -290,14 +290,14 @@ ggplot(df2, aes(x=day, y=mean, color = as.factor(num_terr))) +
         legend.title = element_blank(),
         legend.text = element_text(size=6),
         legend.background = element_rect(fill='transparent'),
-        legend.position = c(0.8,0.8))
+        legend.position = c(0.8,0.2))
 # legend.position = "none")
 ggsave(file="output/edge_m_priority_f_access_score.svg",device="svg",unit="in",width=3,height=3,bg = "transparent") 
 
 
 
 
-# male cumulative sum daily capture score (Priority access score) --------------------
+# cumulative sum daily capture score (Priority access score) --------------------
 df <- df6 %>% 
   filter(treatment=="early")
 
@@ -329,7 +329,7 @@ ggplot(df2, aes(x=day, y=mean, color = as.factor(num_terr))) +
         legend.title = element_blank(),
         legend.text = element_text(size=6),
         legend.background = element_rect(fill='transparent'),
-        legend.position = c(0.8,0.8))
+        legend.position = c(0.8,0.2))
 # legend.position = "none")
 ggsave(file="output/edge_csum_priority_f_access_score.svg",device="svg",unit="in",width=3,height=3,bg = "transparent") 
 
