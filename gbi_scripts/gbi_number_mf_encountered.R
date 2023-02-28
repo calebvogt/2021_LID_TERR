@@ -81,7 +81,7 @@ for(aa in 1:length(social_data)){
 data <- do.call("rbind", trial_stats)
 
 
-# gbi_mf_encountered --------------------
+# gbi_number_mf_encountered --------------------
 df1 <- data %>% 
   mutate(num_terr = as.factor(num_terr)) %>% 
   filter(sex == "M") %>% 
@@ -119,7 +119,7 @@ ggplot(df2, aes(x=day, y=mean, color = as.factor(num_terr))) +
         legend.background = element_rect(fill='transparent'),
         legend.position = c(0.7,0.8))
 # legend.position = "none")
-ggsave(file="output/gbi_mf_encountered.svg",device="svg",unit="in",width=3,height=3,bg = "transparent") 
+ggsave(file="output/gbi_number_mf_encountered.svg",device="svg",unit="in",width=3,height=3,bg = "transparent") 
 
 
 levels(df1$num_terr)

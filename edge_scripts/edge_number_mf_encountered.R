@@ -147,7 +147,7 @@ ggplot(df2, aes(x=day, y=mean, color = as.factor(num_terr))) +
         legend.background = element_rect(fill='transparent'),
         legend.position = c(0.7,0.8))
 # legend.position = "none")
-ggsave(file="output/edge_mf_encountered.svg",device="svg",unit="in",width=3,height=3,bg = "transparent") 
+ggsave(file="output/edge_number_mf_encountered.svg",device="svg",unit="in",width=3,height=3,bg = "transparent") 
 
 
 levels(df1$num_terr)

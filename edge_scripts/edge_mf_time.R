@@ -114,15 +114,15 @@ df1 <- df6 %>%
   
 df2 <- df1 %>% 
   group_by(num_terr,day) %>%
-  summarise(mean = mean(total_mf_s), 
-            sd = sd(total_mf_s), 
+  summarise(mean = mean(total_mf_s/60), 
+            sd = sd(total_mf_s/60), 
             count = n(), 
             sem = (sd/(sqrt(count))))
 
-ggplot(df2, aes(x=day, y=mean/60, color = as.factor(num_terr))) + 
+ggplot(df2, aes(x=day, y=mean, color = as.factor(num_terr))) + 
   geom_line(size = 0.75) + 
   geom_point(size = 1.5) +
-  # geom_errorbar(aes(ymin =mean-sem,ymax=mean+sem), width = 0.2) +
+  geom_errorbar(aes(ymin =mean-sem,ymax=mean+sem), width = 0.2) +
   geom_vline(xintercept=6,color="black",linetype="dashed") +
   scale_x_continuous(limits = c(0.8,22), breaks = seq(0, 20, by = 5)) +
   # scale_y_continuous(limits = c(1,20), breaks = seq(2, 20, by = 2)) +
@@ -131,7 +131,7 @@ ggplot(df2, aes(x=day, y=mean/60, color = as.factor(num_terr))) +
                      labels = c("one-zone males", "two-zone males", "males without territory")) +
   theme_classic() +
   xlab("night") +
-  ylab("time with females (h)") +
+  ylab("time with females (min)") +
   theme(axis.text.x = element_text(color = "black", size = 8),
         axis.title.x = element_text(color = "black", size = 8), 
         axis.text.y = element_text(color = "black", size = 8),
