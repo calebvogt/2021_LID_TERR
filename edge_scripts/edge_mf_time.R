@@ -1,5 +1,4 @@
 ## Created by Caleb C. Vogt, PhD Candidate @ Cornell University
-
 library(tidyverse)
 library(ggrepel)
 library(magrittr)
@@ -10,6 +9,7 @@ library(lmerTest)
 library(emmeans)
 library(diptest)
 
+wd <- setwd("C:/Users/caleb/Box/LID_TERR_2021/2021_MZ_CV_LID_TERR_rfid_analysis")
 data <- read.csv("data/ALLTRIAL_MOVEBOUT_GBI_edgelist.csv")
 metadata <- read.csv("data/metadata.csv")
 
@@ -146,19 +146,11 @@ ggplot(df2, aes(x=day, y=mean, color = as.factor(num_terr))) +
 # legend.position = "none")
 ggsave(file="output/edge_mf_time.svg",device="svg",unit="in",width=3,height=3,bg = "transparent") 
 
-
 levels(df1$num_terr)
-
 m1 = lmer(total_mf_s ~ num_terr*day + (1|focal), data = filter(df1, day %in% 1:5, num_terr %in% 1:2)) 
-summary(m1)
-AIC(m1)
-
 m2 = lmer(total_mf_s ~ num_terr*day + (1|focal), data = filter(df1, day %in% 6:20, num_terr %in% 1:2)) 
-summary(m2)
-AIC(m2)
-
-m3 = lmer(total_mf_s ~ num_terr*day + (1|focal), data = filter(df1, day %in% 6:20, num_terr %in% 0:2)) 
+m3 = lmer(total_mf_s ~ num_terr*day + (1|focal), data = filter(df1, day %in% 6:20, num_terr %in% 0:2))
+m4 = lmer(total_mf_s ~ num_terr+day + (day|focal), data = filter(df1, day %in% 6:20, num_terr %in% 0:2))
 summary(m3)
-AIC(m3)
-
-write.table(summary(m2)$coef, "clipboard-16384", sep="\t", row.names=TRUE, col.names = TRUE)
+AIC(m2,m3,m4)
+write.table(summary(m3)$coef, "clipboard-16384", sep="\t", row.names=TRUE, col.names = TRUE)

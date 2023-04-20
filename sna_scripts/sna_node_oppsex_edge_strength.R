@@ -6,15 +6,14 @@ library(ggpubr)
 library(lme4) 
 library(lmerTest)
 
-df <- read.csv("data/ALLTRIAL_SNA_node_stats.csv")
+wd <- setwd("C:/Users/caleb/Box/LID_TERR_2021/2021_MZ_CV_LID_TERR_rfid_analysis")
+data <- read.csv("data/ALLTRIAL_SNA_node_stats.csv")
 
-# 1v2 night 1-5 ----------------------------------------------------------
-df1 <- df %>% 
+df1 <- data %>% 
   mutate(num_terr = as.factor(num_terr)) %>% 
   filter(sex == "M") %>% 
   filter(num_terr %in% 0:2)
   
-
 df2 <- df1 %>% 
   group_by(num_terr, day) %>%
   summarise(mean = mean(node_oppsex_edge_strength), sd = sd(node_oppsex_edge_strength), count = n(), sem = (sd/(sqrt(count))))
@@ -22,7 +21,7 @@ df2 <- df1 %>%
 ggplot(df2, aes(x=day, y=mean, color=as.factor(num_terr))) + 
     geom_line(size = 0.75) + 
     geom_point(size = 1.5) +
-    # geom_errorbar(aes(ymin = mean - sem, ymax = mean + sem), width = 0.2) +
+    geom_errorbar(aes(ymin = mean - sem, ymax = mean + sem), width = 0.2) +
     geom_vline(xintercept=6,color="black",linetype="dashed") +
     # scale_x_continuous(limits = c(0.8,5.3), breaks = seq(1, 10, by = 1)) +
     # scale_y_continuous(breaks = seq(1, 20, by = 1)) +
@@ -50,16 +49,11 @@ ggsave(file="output/sna_node_oppsex_edge_strength.svg",device="svg",unit="in",wi
 levels(df1$num_terr)
 
 m1 = lmer(node_oppsex_edge_strength ~ num_terr*day + (1|name), data = filter(df1, day %in% 1:5, num_terr %in% 1:2)) 
-summary(m1)
-AIC(m1)
-
 m2 = lmer(node_oppsex_edge_strength ~ num_terr*day + (1|name), data = filter(df1, day %in% 6:20, num_terr %in% 1:2)) 
-summary(m2)
-AIC(m2)
+m3=lmer(node_oppsex_edge_strength ~ num_terr+day + (day|name), data = filter(df1, day %in% 6:20, num_terr %in% 1:2)) 
+m4 = lmer(node_oppsex_edge_strength ~ num_terr*day + (1|name), data = filter(df1, day %in% 6:20, num_terr %in% 0:2)) 
 
-m3 = lmer(node_oppsex_edge_strength ~ num_terr*day + (1|name), data = filter(df1, day %in% 6:20, num_terr %in% 0:2)) 
+AIC(m1,m2,m3,m4)
 summary(m3)
-AIC(m3)
-
-write.table(summary(m2)$coef, "clipboard-16384", sep="\t", row.names=TRUE, col.names = TRUE)
+write.table(summary(m3)$coef, "clipboard-16384", sep="\t", row.names=TRUE, col.names = TRUE)
 
