@@ -88,12 +88,17 @@ df %>% filter(trial == "T001", sex_treatment == "M-late") %>%
   ggplot(., aes(x = time_sec/86400, y = antenna)) +
   geom_point(na.rm=TRUE, size=1) +
   geom_line() +
-  xlab("Day") +
+  labs(x="night",y="zone") +
   scale_x_continuous(breaks=seq(1,20,1)) +
   scale_y_continuous(breaks = seq(1,12,1), limits=c(1,12)) +
-  facet_wrap(~name) +
-  theme(axis.text.x=element_text(angle = 65, hjust = 0.75))
-ggsave(filename = "output/rfid_T001_M_late_antenna_use.png", device = "png", bg = "white")
+  theme_classic()+
+  theme(strip.text = element_text(face = "bold", size = 10),
+        panel.grid.major= element_line(color = "grey", size=0.5),
+        panel.grid.major.x = element_blank(), ## remove vertical gridlines
+        panel.background = element_blank(),
+        axis.text.x=element_text(angle = 65, hjust = 0.75)) +
+  facet_wrap(~code,nrow=3,ncol=4) 
+# ggsave(filename = "output/rfid_T001_M_late_antenna_use.png", device = "png", bg = "white")
 
 
 ## T001_F_early
